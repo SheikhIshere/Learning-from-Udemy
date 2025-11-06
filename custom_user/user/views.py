@@ -12,6 +12,7 @@ from .models import(
 )
 from rest_framework import viewsets
 from .permissions import UpdateOwnProfile
+from rest_framework import filters
 
 class HelloApi(APIView):
     """this is just for testing the api view"""
@@ -151,3 +152,5 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = UserProfile.objects.all()
     authentication_classes = (TokenAuthentication,)
     permission_classes = (UpdateOwnProfile,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name', 'email', )
