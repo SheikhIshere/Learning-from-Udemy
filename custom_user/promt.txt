@@ -1,14 +1,29 @@
+find is there anything wrong with the code, the thing i cannot seee any name field to write the name:
+here is the code i have recently changed
+serializers.py:
+from rest_framework import (
+    serializers,
+    status
+)
+from .models import UserProfile
+
+
+class HelloSerializer(serializers.Serializer):
+    """ Serializer is a name field to testing our serializers """
+    name = serializers.CharField(max_length=10)
+
+
+
+views.py:
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import (
-    HelloSerializer
-)
+
 
 class HelloApi(APIView):
     """this is just for testing the api view"""
-    serializer_class = HelloSerializer
+
     def get(self, request, format = None):
         """return a list of api view features"""
         feature_apiview = [
@@ -43,29 +58,3 @@ class HelloApi(APIView):
                 serializer.errors,
                 status = status.HTTP_400_BAD_REQUEST
             )
-
-
-    def put(self, request, pk = None):
-        """handel updating an object"""
-        return Response(
-            {
-                'method': 'PUT'
-            }
-        )
-    
-    def patch(self, request, pk = None):
-        """handel updating part of an object"""
-        return Response(
-            {
-                'method': 'PATCH'
-            }
-        )
-    
-    def delete(self, request, pk = None):
-        """"Deleting the object"""
-        return Response(
-            {
-                'method': 'DELETE'
-            }
-        )
-    
