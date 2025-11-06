@@ -13,6 +13,8 @@ from .models import(
 from rest_framework import viewsets
 from .permissions import UpdateOwnProfile
 from rest_framework import filters
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.settings import api_settings
 
 class HelloApi(APIView):
     """this is just for testing the api view"""
@@ -154,3 +156,8 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     permission_classes = (UpdateOwnProfile,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', 'email', )
+
+
+class UserLoginApiView(ObtainAuthToken):
+    """handeling user authentication token"""
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
