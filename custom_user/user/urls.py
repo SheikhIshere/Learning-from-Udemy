@@ -1,13 +1,14 @@
 from django.urls import path, include
 from .views import (
     HelloApi,
-    HelloViewSet
+    HelloViewSet,
+    UserProfileViewSet
 )
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register('hello-viewset', HelloViewSet, basename='hello-viewset')
-
+router.register('profile', UserProfileViewSet, basename='user_profile')
 
 
 

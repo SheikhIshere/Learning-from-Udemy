@@ -2,10 +2,16 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
 from .serializers import (
-    HelloSerializer
+    HelloSerializer, 
+    UserProfileSerializer
+)
+from .models import(
+    UserProfile
 )
 from rest_framework import viewsets
+from .permissions import UpdateOwnProfile
 
 class HelloApi(APIView):
     """this is just for testing the api view"""
@@ -137,3 +143,11 @@ class HelloViewSet(viewsets.ViewSet):
                 'http response': 'DELETE'
             }
         )
+
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    """handeling the user create and update of profiel"""
+    serializer_class = UserProfileSerializer
+    queryset = UserProfile.objects.all()
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (UpdateOwnProfile,)
