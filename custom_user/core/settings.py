@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
     # 3rd party app
     'rest_framework',
+    "rest_framework.authtoken",
 ]
 
 AUTH_USER_MODEL = 'user.UserProfile'
