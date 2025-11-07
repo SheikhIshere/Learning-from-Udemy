@@ -8,13 +8,13 @@ from .serializers import (
     UserProfileSerializer,
     ProfileFeedItemSerializer,
 )
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from .models import(
     UserProfile,
     ProfileFeed,
 )
 from rest_framework import viewsets
-from .permissions import UpdateOwnProfile
+from .permissions import UpdateOwnProfile, UpdateOwnStatus
 from rest_framework import filters
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
@@ -169,7 +169,11 @@ class UserLoginApiView(ObtainAuthToken):
 class ProfileFeedViewset(viewsets.ModelViewSet):
     """it handels profile's updating read and deleting the profile item"""
     authentication_classes = (TokenAuthentication, )
-    # permission_classes = (IsAuthenticated,)  # ADD THIS    
+    permission_classes = (
+        UpdateOwnStatus,
+        # IsAuthenticatedOrReadOnly, # this allows annonymous user see the feed
+        IsAuthenticated, # and this one not
+    )    
     serializer_class = ProfileFeedItemSerializer
     queryset = ProfileFeed.objects.all()
 
