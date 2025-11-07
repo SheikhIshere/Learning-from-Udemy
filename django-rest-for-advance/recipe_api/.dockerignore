@@ -1,0 +1,16 @@
+# git file
+.git
+.gitignore
+
+# docker file
+.docker
+
+
+# python vomit :)
+*.pyc
+**/__pycache__/
+***/__pycache__/
+
+# cridential things
+.venv
+.env
