@@ -5,10 +5,13 @@ from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from .serializers import (
     HelloSerializer, 
-    UserProfileSerializer
+    UserProfileSerializer,
+    ProfileFeedItemSerializer,
 )
+from rest_framework.permissions import IsAuthenticated
 from .models import(
-    UserProfile
+    UserProfile,
+    ProfileFeed,
 )
 from rest_framework import viewsets
 from .permissions import UpdateOwnProfile
@@ -161,3 +164,15 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 class UserLoginApiView(ObtainAuthToken):
     """handeling user authentication token"""
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+
+
+class ProfileFeedViewset(viewsets.ModelViewSet):
+    """it handels profile's updating read and deleting the profile item"""
+    authentication_classes = (TokenAuthentication, )
+    # permission_classes = (IsAuthenticated,)  # ADD THIS    
+    serializer_class = ProfileFeedItemSerializer
+    queryset = ProfileFeed.objects.all()
+
+    def perform_create(self, serializer):
+        """sets user profile to the logged in user"""
+        serializer.save(user_profile=self.request.user)

@@ -3,14 +3,15 @@ from .views import (
     HelloApi,
     HelloViewSet,
     UserProfileViewSet,
-    UserLoginApiView
+    UserLoginApiView,
+    ProfileFeedViewset,
 )
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register('hello-viewset', HelloViewSet, basename='hello-viewset')
 router.register('profile', UserProfileViewSet, basename='user_profile')
-
+router.register('feed', ProfileFeedViewset, basename='user-feed')
 
 
 urlpatterns = [
