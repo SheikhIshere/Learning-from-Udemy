@@ -2,14 +2,14 @@ version: '3.9'
 
 services:
   app:
-    build: 
+    build:
       context: .
       args:
-        - DEV:TRUE
+        DEV: "true"        # use quotes, key: value
     ports:
-      - '8000:8000'
+      - "8000:8000"
     volumes:
       - ./App:/App
+    working_dir: /App
     command: >
-      sh -c 'python manage.py runserver 0.0.0.0.8000'
-    
+      sh -c "python manage.py runserver 0.0.0.0:8000"

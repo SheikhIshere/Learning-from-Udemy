@@ -1,16 +1,12 @@
-# git file
+# VCS and docker
 .git
 .gitignore
-
-# docker file
 .docker
 
-
-# python vomit :)
+# Python junk
+__pycache__/
 *.pyc
-**/__pycache__/
-***/__pycache__/
 
-# cridential things
-.venv
+# Local env / secrets
+.venv/
 .env

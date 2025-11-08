@@ -1,0 +1,78 @@
+.dockerignore:
+---------------
+# git file
+.git
+.gitignore
+
+# docker file
+.docker
+
+
+# python vomit :)
+*.pyc
+**/__pycache__/
+***/__pycache__/
+
+# cridential things
+.venv
+.env
+
+
+Dockerfile:
+-----------
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/usr/local/bin:$PATH"
+
+WORKDIR /App
+
+ARG DEV=false
+
+COPY requirements.txt .
+COPY requirements.dev.txt .
+
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    if [ "$DEV" = "true" ]; then \
+        pip install --no-cache-dir -r requirements.dev.txt; \
+    fi
+
+COPY . .
+
+EXPOSE 8000
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+USER django-user
+
+
+
+docker-compose.yml:
+--------------------
+version: '3.9'
+
+services:
+  app:
+    build: 
+      context: .
+      args:
+        - DEV:TRUE
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./App:/App
+    command: >
+      sh -c 'python manage.py runserver 0.0.0.0.8000'
+    
+
+
+and in the flake8
+app/.flake8:
+-------------
+[flake8]
+exclude = 
+    migrations,
+    __pycache__,
+    manage.py,
+    settings.py,
