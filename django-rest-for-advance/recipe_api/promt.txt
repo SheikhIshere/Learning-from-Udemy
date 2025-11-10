@@ -1,78 +1,166 @@
-.dockerignore:
----------------
-# git file
-.git
-.gitignore
-
-# docker file
-.docker
+i guss all i did seeing course from udemy all are correct but still i am getting error can you chheck it: 
 
 
-# python vomit :)
-*.pyc
-**/__pycache__/
-***/__pycache__/
-
-# cridential things
-.venv
-.env
-
-
-Dockerfile:
------------
-FROM python:3.12-slim
-
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PATH="/usr/local/bin:$PATH"
-
-WORKDIR /App
-
-ARG DEV=false
-
-COPY requirements.txt .
-COPY requirements.dev.txt .
-
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    if [ "$DEV" = "true" ]; then \
-        pip install --no-cache-dir -r requirements.dev.txt; \
-    fi
-
-COPY . .
-
-EXPOSE 8000
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
-USER django-user
-
-
-
-docker-compose.yml:
---------------------
-version: '3.9'
-
-services:
-  app:
-    build: 
-      context: .
-      args:
-        - DEV:TRUE
-    ports:
-      - '8000:8000'
-    volumes:
-      - ./App:/App
-    command: >
-      sh -c 'python manage.py runserver 0.0.0.0.8000'
-    
-
-
-and in the flake8
-app/.flake8:
+models.py: 
 -------------
-[flake8]
-exclude = 
-    migrations,
-    __pycache__,
-    manage.py,
-    settings.py,
+from django.db import models
+from django.contrib.auth.models import(
+    AbstractBaseUser,
+    PermissionsMixin,
+    UserManager,
+)
+
+class CustomUserManager(UserManager):
+    """manager for user"""
+    def create_user(self, email, password=None, **extra_fields):
+        """create save and return the new user"""
+        if not email:
+            raise ValueError('User must have email')
+
+        user = self.model(email=self.normalize_email(email), **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+
+        return user
+
+    def create_superuser(self, email, password):
+        """creating new superuser"""
+        user = self.create_user(email, password)
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using =self._db)
+
+        return user
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+    """user in the system"""
+    email  = models.EmailField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
+
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    
+    objects = CustomUserManager()
+
+    USERNAME_FIELD = 'email'
+
+
+
+
+
+
+
+
+
+
+
+
+
+serializers.py:
+----------------
+"""
+serializers.py for user api
+"""
+
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+class UserSerializers(serializers.ModelSerializer):
+    """serializers for user serializers"""
+    class Meta:
+        model = User
+        fields = ['email', 'name', 'password']
+        extra_kwargs = {'password': {'write_only': True}, 'min_length': 5}
+
+    def create(self, validated_data):
+        return User.objects.create_user(**validated_data)
+
+
+
+
+
+
+
+views.py;
+-----------
+"""views for the useer api"""
+
+from rest_framework import generics
+from .serializers import UserSerializers
+
+
+class CreateUserVIew(generics.CreateAPIView):
+    """creating new user in the system"""
+    serializer_class = UserSerializers
+
+
+
+
+and here are the test cases you might wanna see: 
+------------------------------------------------
+"""
+Testing api of user
+"""
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django.urls import reverse
+
+from rest_framework.test import APIClient
+from rest_framework import status
+
+User = get_user_model()
+CREATE_USER_URL = reverse('user:create')
+
+
+def create_user(**params):
+    """create and return new user"""
+    return User.objects.create_user(**params)
+
+class PublicUserApiTest(TestCase):
+    """test the public features of the user api"""
+    def setUp(self):
+        self.client = APIClient()
+    
+    def test_create_user_success(self):
+        """test creating user is success full"""
+        payload = {
+            'email': 'test@example.com',
+            'password': 'testpass123',
+            'name': 'test name',
+        }
+        res = self.client.post(CREATE_USER_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        user = User.objects.get(email=payload['email'])
+        self.assertEqual(user.check_password[payload['password']])
+        self.assertNotIn('password', res.data)
+    
+    def test_user_with_email_exist_error(self):
+        """test error if user's email is already exist in data base"""
+        payload = {
+            'email': 'test@example.com',
+            'password': 'testpass123',
+            'name': 'test name',
+        }
+        create_user(**payload)
+        res = self.client.post(CREATE_USER_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_password_is_too_short_error(self):
+        """giving error if password is too short ew!!"""
+        payload = {
+            'email': 'test@example.com',
+            'password': 'ew',
+            'name': 'test name',
+        }
+        res = self.client.post(CREATE_USER_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        user_exist = User.objects.filter(
+            email = payload['email']
+        ).exists()
+        self.assertFalse(user_exist)
