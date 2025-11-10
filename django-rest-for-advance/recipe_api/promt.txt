@@ -1,166 +1,134 @@
-i guss all i did seeing course from udemy all are correct but still i am getting error can you chheck it: 
+cann you check why i am getting error: 
+
+imran-rafi@imran-rafi-ASUS-TUF-Gaming-A15-FA507NVR-FA507NVR:~/Desktop/test/udemy_learning/django-rest-for-advance/recipe_api$ docker-compose run --rm app sh -c 'python manage.py test'
+WARN[0000] /home/imran-rafi/Desktop/test/udemy_learning/django-rest-for-advance/recipe_api/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+[+] Running 1/1
+ ✔ Container fd2db5f7327f_recipe_api-db-1  Started                                                                                                                                     0.1s 
+Found 17 test(s).
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+.....F.....F.....
+======================================================================
+FAIL: test_update_user_profile (test.test_user.PrivetUserTest.test_update_user_profile)
+testing to update user profile
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/App/test/test_user.py", line 147, in test_update_user_profile
+    self.assertEqual(self.user.name, payload['name'])
+AssertionError: 'test name' != 'update name'
+- test name
++ update name
 
 
-models.py: 
--------------
-from django.db import models
-from django.contrib.auth.models import(
-    AbstractBaseUser,
-    PermissionsMixin,
-    UserManager,
-)
+======================================================================
+FAIL: test_retrive_user_unauthorize (test.test_user.PublicUserApiTest.test_retrive_user_unauthorize)
+testing authentication is required for user
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/App/test/test_user.py", line 107, in test_retrive_user_unauthorize
+    self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+AssertionError: 403 != 401
 
-class CustomUserManager(UserManager):
-    """manager for user"""
-    def create_user(self, email, password=None, **extra_fields):
-        """create save and return the new user"""
-        if not email:
-            raise ValueError('User must have email')
+----------------------------------------------------------------------
+Ran 17 tests in 3.411s
 
-        user = self.model(email=self.normalize_email(email), **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-
-        return user
-
-    def create_superuser(self, email, password):
-        """creating new superuser"""
-        user = self.create_user(email, password)
-        user.is_staff = True
-        user.is_superuser = True
-        user.save(using =self._db)
-
-        return user
-
-
-class User(AbstractBaseUser, PermissionsMixin):
-    """user in the system"""
-    email  = models.EmailField(max_length=255, unique=True)
-    name = models.CharField(max_length=255)
-
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-    
-    objects = CustomUserManager()
-
-    USERNAME_FIELD = 'email'
+FAILED (failures=2)
+Destroying test database for alias 'default'...
 
 
 
+my test.py:
+------------
 
 
 
+teacher's test.py:
+---------------------
+
+CREATE_USER_URL = reverse('user:create')
+TOKEN_URL = reverse('user:token')
+ME_URL = reverse('user:me')
 
 
 
+class PrivateUserApiTests(TestCase):
+    """Test API requests that require authentication."""
+
+    def setUp(self):
+        self.user = create_user(
+            email='test@example.com',
+            password='testpass123',
+            name='Test Name',
+        )
+        self.client = APIClient()
+        self.client.force_authentication(user=self.user)
+
+    def test_retrieve_profile_success(self):
+        """Test retrieving profile for logged in user."""
+        res = self.client.get(ME_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, {
+            'name': self.user.name,
+            'email': self.user.email,
+        })
+
+    def test_post_me_not_allowed(self):
+        """Test POST is not allowed for the me endpoint."""
+        res = self.client.post(ME_URL, {})
+
+        self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_update_user_profile(self):
+        """Test updating the user profile for the authenticated user."""
+        payload = {'name': 'Updated name', 'password': 'newpassword123'}
+
+        res = self.client.patch(ME_URL, payload)
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.name, payload['name'])
+        self.assertTrue(self.user.check_password(payload['password']))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+!!incompleate
 
 
+views.py + serializers.py(from here mostly will from me):
+-----------------------------------------
+class ManageUserView(generics.RetrieveAPIView):
+    """manage the authenticated user"""
+    serializer_class = UserSerializers
+    authentication_class = (authentication.TokenAuthentication, )
+    permission_classes = [permissions.IsAuthenticated]
 
-
-serializers.py:
-----------------
-"""
-serializers.py for user api
-"""
-
-from rest_framework import serializers
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
+    def get_object(self):
+        """retrive and return authenticated user"""
+        return self.request.user
 
 
 class UserSerializers(serializers.ModelSerializer):
     """serializers for user serializers"""
+    password = serializers.CharField(
+        write_only=True,
+        min_length=5,
+        style={'input_type': 'password'}
+    )
     class Meta:
         model = User
         fields = ['email', 'name', 'password']
-        extra_kwargs = {'password': {'write_only': True}, 'min_length': 5}
+        # extra_kwargs = {'password': {'write_only': True}, 'min_length': 5}
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
-
-
-
-
-
-
-
-views.py;
------------
-"""views for the useer api"""
-
-from rest_framework import generics
-from .serializers import UserSerializers
-
-
-class CreateUserVIew(generics.CreateAPIView):
-    """creating new user in the system"""
-    serializer_class = UserSerializers
-
-
-
-
-and here are the test cases you might wanna see: 
-------------------------------------------------
-"""
-Testing api of user
-"""
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from django.urls import reverse
-
-from rest_framework.test import APIClient
-from rest_framework import status
-
-User = get_user_model()
-CREATE_USER_URL = reverse('user:create')
-
-
-def create_user(**params):
-    """create and return new user"""
-    return User.objects.create_user(**params)
-
-class PublicUserApiTest(TestCase):
-    """test the public features of the user api"""
-    def setUp(self):
-        self.client = APIClient()
     
-    def test_create_user_success(self):
-        """test creating user is success full"""
-        payload = {
-            'email': 'test@example.com',
-            'password': 'testpass123',
-            'name': 'test name',
-        }
-        res = self.client.post(CREATE_USER_URL, payload)
-        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        user = User.objects.get(email=payload['email'])
-        self.assertEqual(user.check_password[payload['password']])
-        self.assertNotIn('password', res.data)
-    
-    def test_user_with_email_exist_error(self):
-        """test error if user's email is already exist in data base"""
-        payload = {
-            'email': 'test@example.com',
-            'password': 'testpass123',
-            'name': 'test name',
-        }
-        create_user(**payload)
-        res = self.client.post(CREATE_USER_URL, payload)
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        user = super().update(instance, validated_data)
 
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        if password:
+            user.set_password(password)
+            user.save()
+            
+        return user        
 
-    def test_password_is_too_short_error(self):
-        """giving error if password is too short ew!!"""
-        payload = {
-            'email': 'test@example.com',
-            'password': 'ew',
-            'name': 'test name',
-        }
-        res = self.client.post(CREATE_USER_URL, payload)
-
-        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        user_exist = User.objects.filter(
-            email = payload['email']
-        ).exists()
-        self.assertFalse(user_exist)
+    path('me/', ManageUserView.as_view(), name='me' )
