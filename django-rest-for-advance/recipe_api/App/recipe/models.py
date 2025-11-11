@@ -10,7 +10,7 @@ class Recipe(models.Model):
     """model for core recipe + objects"""
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     # title = models.CharField(max_length=255), # bug fixed: ','
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, null=True, blank=True )
     description = models.TextField(blank=True)
     time_minuts = models.IntegerField()
     price = models.DecimalField(max_digits=5, decimal_places=2)
