@@ -33,6 +33,16 @@ def create_recipe(user, **params):
     recipe = Recipe.objects.create(user = user, **default)
     return recipe
 
+def recipe_details_urls(recipe_id):
+    """creating and returninng recipe urls"""
+    return reverse('recipe:recipe-detail', args=[recipe_id])
+
+def create_user(**params):
+    """create_and_return_new_user"""
+    return User.objects.create_user(
+        **params
+    )
+
 
 class RecipeTesting(TestCase):
     """testing recipe"""
@@ -107,3 +117,34 @@ class PrivetRecipeApiTest(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_get_recipe_detail(self):
+        """test get recipe detail"""
+        recipe = create_recipe(user = self.user)
+
+        url = recipe_details_urls(recipe.id)
+        res = self.client.get(url)
+
+        serializer = RecipeDetailsSerializer(recipe)
+
+        self.assertEqual(res.data, serializer.data)
+
+    def test_create_recipe(self):
+        """test creating recipe"""
+        payload = {
+            'title': 'Cat comb meat dish',
+            'description': 'delicious cat food, yum!!',
+            'time_minuts': 30,
+            'price': Decimal('3.99'),
+            'link': 'https://www.youtube.com/shorts/dko1j1V0HsI',
+        }
+        res = self.client.post(RECIPE_URLS, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        recipe = Recipe.objects.get(id=res.data['id'])
+
+        for k,v in payload.items():
+            self.assertEqual(getattr(recipe, k), v)
+        
+        self.assertEqual(recipe.user, self.user)

@@ -4,13 +4,31 @@ from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import RecipeSerializer
+from .serializers import (
+    RecipeSerializer,
+    RecipeDetailsSerializer,
+)
 from .models import Recipe
 
+"""this was made to just show the list"""
+# class RecipeViewset(viewsets.ModelViewSet):
+#     """view for manage recipe api"""
+#     serializer_class = RecipeSerializer
+#     queryset = Recipe.objects.all()
+#     authentication_classes = (TokenAuthentication, )
+#     permission_classes = (IsAuthenticated, )
 
+#     def get_queryset(self):
+#         """retriving recipe for authhnticated user"""
+#         return self.queryset.filter(user = self.request.user).order_by('-id')
+
+
+"""
+this is kinda advance one ,this one not only show list but also shows details
+"""    
 class RecipeViewset(viewsets.ModelViewSet):
     """view for manage recipe api"""
-    serializer_class = RecipeSerializer
+    serializer_class = RecipeDetailsSerializer
     queryset = Recipe.objects.all()
     authentication_classes = (TokenAuthentication, )
     permission_classes = (IsAuthenticated, )
@@ -18,3 +36,14 @@ class RecipeViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         """retriving recipe for authhnticated user"""
         return self.queryset.filter(user = self.request.user).order_by('-id')
+
+    def get_serializer_class(self):
+        """return serializers class for request"""
+        if self.action == 'list':
+            return RecipeSerializer
+        
+        return self.serializer_class
+
+    def perform_create(self, serializer):
+        """creating new recipe"""
+        serializer.save(user = self.request.user)
