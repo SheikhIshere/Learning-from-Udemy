@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
-from .models import Recipe
+from .models import Recipe, Tag
 
 @admin.register(Recipe)
 class RecipeAdminModel(ModelAdmin):
@@ -11,4 +11,11 @@ class RecipeAdminModel(ModelAdmin):
         'title',
         'time_minuts',
         'price',
+    ]
+
+@admin.register(Tag)
+class TagAdmin(ModelAdmin):
+    list_display = [
+        'user',
+        'name',
     ]

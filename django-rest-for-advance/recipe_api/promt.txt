@@ -1,134 +1,225 @@
-cann you check why i am getting error: 
+here i am facing some probblem: 
 
-imran-rafi@imran-rafi-ASUS-TUF-Gaming-A15-FA507NVR-FA507NVR:~/Desktop/test/udemy_learning/django-rest-for-advance/recipe_api$ docker-compose run --rm app sh -c 'python manage.py test'
-WARN[0000] /home/imran-rafi/Desktop/test/udemy_learning/django-rest-for-advance/recipe_api/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
-[+] Running 1/1
- ✔ Container fd2db5f7327f_recipe_api-db-1  Started                                                                                                                                     0.1s 
-Found 17 test(s).
-Creating test database for alias 'default'...
-System check identified no issues (0 silenced).
-.....F.....F.....
-======================================================================
-FAIL: test_update_user_profile (test.test_user.PrivetUserTest.test_update_user_profile)
-testing to update user profile
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/App/test/test_user.py", line 147, in test_update_user_profile
-    self.assertEqual(self.user.name, payload['name'])
-AssertionError: 'test name' != 'update name'
-- test name
-+ update name
-
-
-======================================================================
-FAIL: test_retrive_user_unauthorize (test.test_user.PublicUserApiTest.test_retrive_user_unauthorize)
-testing authentication is required for user
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/App/test/test_user.py", line 107, in test_retrive_user_unauthorize
-    self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-AssertionError: 403 != 401
-
-----------------------------------------------------------------------
-Ran 17 tests in 3.411s
-
-FAILED (failures=2)
-Destroying test database for alias 'default'...
+here is the error from my terminla: 
 
 
 
-my test.py:
-------------
+
+here is referance code from my teacher from udemy_learning
+"""
+Tests for the tags API.
+"""
+from django.contrib.auth import get_user_model
+from django.urls import reverse
+from django.test import TestCase
+
+from rest_framework import status
+from rest_framework.test import APIClient
+
+from core.models import Tag
+
+from recipe.serializers import TagSerializer
 
 
-
-teacher's test.py:
----------------------
-
-CREATE_USER_URL = reverse('user:create')
-TOKEN_URL = reverse('user:token')
-ME_URL = reverse('user:me')
+TAGS_URL = reverse('recipe:tag-list')
 
 
+def create_user(email='user@example.com', password='testpass123'):
+    """Create and return a user."""
+    return get_user_model().objects.create_user(email=email, password=password)
 
-class PrivateUserApiTests(TestCase):
-    """Test API requests that require authentication."""
+
+class PublicTagsApiTests(TestCase):
+    """Test unauthenticated API requests."""
 
     def setUp(self):
-        self.user = create_user(
-            email='test@example.com',
-            password='testpass123',
-            name='Test Name',
-        )
         self.client = APIClient()
-        self.client.force_authentication(user=self.user)
 
-    def test_retrieve_profile_success(self):
-        """Test retrieving profile for logged in user."""
-        res = self.client.get(ME_URL)
+    def test_auth_required(self):
+        """Test auth is required for retrieving tags."""
+        res = self.client.get(TAGS_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class PRivateTagsApiTests(TestCase):
+    """Test authenticated API requests."""
+
+    def setUp(self):
+        self.user = create_user()
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def test_retrieve_tags(self):
+        """Test retrieving a list of tags."""
+        Tag.objects.create(user=self.user, name='Vegan')
+        Tag.objects.create(user=self.user, name='Dessert')
+
+        res = self.client.get(TAGS_URL)
+
+        tags = Tag.objects.all().order_by('-name')
+        serializer = TagSerializer(tags, many=True)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_tags_limited_to_user(self):
+        """Test list of tags is limited to authenticated user."""
+        user2 = create_user(email='user2@example.com')
+        Tag.objects.create(user=user2, name='Fruity')
+        tag = Tag.objects.create(user=self.user, name='Comfort Food')
+
+        res = self.client.get(TAGS_URL)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, {
-            'name': self.user.name,
-            'email': self.user.email,
-        })
-
-    def test_post_me_not_allowed(self):
-        """Test POST is not allowed for the me endpoint."""
-        res = self.client.post(ME_URL, {})
-
-        self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def test_update_user_profile(self):
-        """Test updating the user profile for the authenticated user."""
-        payload = {'name': 'Updated name', 'password': 'newpassword123'}
-
-        res = self.client.patch(ME_URL, payload)
-
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.name, payload['name'])
-        self.assertTrue(self.user.check_password(payload['password']))
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-
-!!incompleate
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data[0]['name'], tag.name)
+        self.assertEqual(res.data[0]['id'], tag.id)
 
 
-views.py + serializers.py(from here mostly will from me):
------------------------------------------
-class ManageUserView(generics.RetrieveAPIView):
-    """manage the authenticated user"""
-    serializer_class = UserSerializers
-    authentication_class = (authentication.TokenAuthentication, )
-    permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
-        """retrive and return authenticated user"""
-        return self.request.user
+here is my test:
+"""this is for testing tag sytem"""
+from decimal import Decimal
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from recipe.models import (
+    Tag
+)
+from django.urls import reverse
+from recipe.serializers import TagSerialization
+
+from rest_framework import status
+from rest_framework.test import APIClient
+
+User = get_user_model()
+TAG_URLS = reverse('recipe:tag-list')
+
+def create_user(email = 'test@example.com', password = 'testpass124'):
+    """helper function for create and return new user"""
+    return User.objects.create_user(email, password)
 
 
-class UserSerializers(serializers.ModelSerializer):
-    """serializers for user serializers"""
-    password = serializers.CharField(
-        write_only=True,
-        min_length=5,
-        style={'input_type': 'password'}
-    )
-    class Meta:
-        model = User
-        fields = ['email', 'name', 'password']
-        # extra_kwargs = {'password': {'write_only': True}, 'min_length': 5}
+class TagTest(TestCase):
+    """here i will be testing the tag"""
+    def test_creating_tag(self):
+        """test of creating tag"""
+        user = create_user()
+        tag = Tag.objects.create(user=user, name='Tag1')
 
-    def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+        self.assertEqual(str(tag), tag.name)
+
+
+class PublicTagApiTest(TestCase):
+    """here i will be testing unauthenticated api request"""
+    def setUp(self):
+        """setting up the tag testing"""
+        self.client = APIClient()
+
+    def test_auth_required(self):
+        """auth is required while retriving tags"""        
+        res = self.client.get(TAG_URLS)
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
     
-    def update(self, instance, validated_data):
-        password = validated_data.pop('password', None)
-        user = super().update(instance, validated_data)
 
-        if password:
-            user.set_password(password)
-            user.save()
-            
-        return user        
+class PrivetTagApiTest(TestCase):
+    """testing authenticated api request"""
+    def setUp(self):
+        """setting up"""
+        self.user = create_user()
+        self.client = APIClient()
+        self.client.force_login(self.user)
+    
+    def test_retriving_tags(self):
+        """test: retriving the list of tags"""
+        Tag.objects.create(user=self.user, name='meat')
+        Tag.objects.create(user=self.user, name='vegan')
+        
+        res = self.client.get(TAG_URLS)
 
-    path('me/', ManageUserView.as_view(), name='me' )
+        tags = Tag.objects.all().order_by('-name')
+        serializer = TagSerialization(tags, many=True)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+    
+    def test_tags_limited_to_user(self):
+        """testing tags which are for limited user like(user's post)"""
+        user2 = create_user(email='test2@example.com')
+        Tag.objects.filter(user=user2, name='fruti')
+        tag = Tag.objects.create(user=self.user, name='good-food')
+
+        res = self.client.get(TAG_URLS)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data[0]['name'], tag.name)
+        self.assertEqual(res.data[0]['id'], tag.id)
+
+
+model.py
+-----------
+class Tag(models.Model):
+    """creating tag model"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+views.py
+----------
+class TagViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """manage tags in the data base"""
+    serializer_class = TagSerialization
+    queryset = Tag.objects.all()
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        """filter query set for authenticated user"""
+        return self.queryset.filter(user=self.request.user).order_by('-name')
+    
+
+
+serializers.py
+---------------
+class TagSerialization(serializers.ModelSerializer):
+    """serializer for tag"""
+    class Meta:
+        model = Tag
+        fields = ['id', 'name']
+        read_only_field = ['id']
+
+
+ask more if you need
+
+
+
+
+
+
+
+
+
+    def test_create_recipe_with_new_tags(self):
+        """Test creating a recipe with new tags."""
+        payload = {
+            'title': 'Thai Prawn Curry',
+            'time_minutes': 30,
+            'price': Decimal('2.50'),
+            'tags': [{'name': 'Thai'}, {'name': 'Dinner'}],
+        }
+        res = self.client.post(RECIPES_URL, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipes = Recipe.objects.filter(user=self.user)
+        self.assertEqual(recipes.count(), 1)
+        recipe = recipes[0]
+        self.assertEqual(recipe.tags.count(), 2)
+        for tag in payload['tags']:
+            exists = recipe.tags.filter(
+                name=tag['name'],
+                user=self.user,
+            ).exists()
+            self.assertTrue(exists)
