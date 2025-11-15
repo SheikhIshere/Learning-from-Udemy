@@ -11,10 +11,12 @@ from .serializers import (
     RecipeSerializer,
     RecipeDetailsSerializer,
     TagSerialization,
+    IngredientSerializer
 )
 from .models import (
     Recipe,
-    Tag
+    Tag,
+    Ingredient
 )
 
 """this was made to just show the list"""
@@ -72,4 +74,20 @@ class TagViewSet(
     def get_queryset(self):
         """filter query set for authenticated user"""
         return self.queryset.filter(user=self.request.user).order_by('-name')
+    
+
+class IngredientViewset(
+    mixins.DestroyModelMixin,
+    mixins.UpdateModelMixin, 
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet):
+    """here i am managing ingredient in the data base"""
+    serializer_class = IngredientSerializer
+    queryset = Ingredient.objects.all()
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        """filter queryset to authenticated user"""
+        return self.queryset.filter(user = self.request.user).order_by('-name')
     
