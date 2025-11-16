@@ -10,6 +10,7 @@ from .models import (
 User = get_user_model()
 
 
+
 class IngredientSerializer(serializers.ModelSerializer):
     """serializer for ingredient"""
     class Meta:
@@ -104,3 +105,11 @@ class RecipeDetailsSerializer(RecipeSerializer):
         fields = RecipeSerializer.Meta.fields + ['description']
 
 
+class RecipeImageSerializer(serializers.ModelSerializer):
+    """serializer for uploading images to recipe """
+    class Meta:
+        model = Recipe
+        fields = ['id', 'image']
+        read_only_fields = ['id']
+        # extra_kwargs = {'image': {'required': 'True'}}
+        extra_kwargs = {'image': {'required': True}}

@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class ModelTest(TestCase):
-    def test_user_with_email_successfull(self):
+    def test_user_with_email_successful(self):
         email = 'test@example.com'
         password = 'testpassword@@'
         user = User.objects.create_user(
@@ -45,3 +45,4 @@ class ModelTest(TestCase):
         )
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+

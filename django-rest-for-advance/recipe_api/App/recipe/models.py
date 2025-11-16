@@ -1,4 +1,15 @@
 """creating models for the recipe app"""
+import uuid
+import os
+
+
+def recipe_image_file_path(instance, filename):
+    """generate file path for new recipe image"""
+    ext = os.path.splitext(filename)[1]
+    filename = f'{uuid.uuid4()}{ext}'
+
+    return os.path.join('uploads', 'recipe', filename)
+
 
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -18,6 +29,7 @@ class Recipe(models.Model):
 
     tags = models.ManyToManyField('Tag')
     ingredient = models.ManyToManyField('Ingredient')
+    image = models.ImageField(null=True, upload_to=recipe_image_file_path)
 
     def __str__(self):
         return self.title
