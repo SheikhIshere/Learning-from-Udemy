@@ -9,7 +9,7 @@ class RecipeAdminModel(ModelAdmin):
     list_display = [
         'user',
         'title',
-        'time_minuts',
+        'time_minutes',
         'price',
     ]
 

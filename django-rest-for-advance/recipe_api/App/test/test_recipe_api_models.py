@@ -26,7 +26,7 @@ def create_recipe(user, **params):
     default = {
         'title': 'simple recipe',
         'description': 'example discription',
-        'time_minuts': 22,
+        'time_minutes': 22,
         'price': Decimal('5.25'),
         'link': 'http://example.com//recipe.pdf'
     }
@@ -59,7 +59,7 @@ class RecipeTesting(TestCase):
             user = user,
             title = 'example recipe name',
             description = 'Sample of recipe',
-            time_minuts = 5,
+            time_minutes = 5,
             price = Decimal('5.50'),
             link = 'none',
         )
@@ -142,7 +142,7 @@ class PrivetRecipeApiTest(TestCase):
         payload = {
             'title': 'Cat comb meat dish',
             'description': 'delicious cat food, yum!!',
-            'time_minuts': 30,
+            'time_minutes': 30,
             'price': Decimal('3.99'),
             'link': 'https://www.youtube.com/shorts/dko1j1V0HsI',
         }
@@ -186,7 +186,7 @@ class PrivetRecipeApiTest(TestCase):
         payload = {
             'title': 'Cat comb meat dish',
             'description': 'delicious cat food, yum!!',
-            'time_minuts': 30,
+            'time_minutes': 30,
             'price': Decimal('3.99'),
             'link': 'https://www.youtube.com/shorts/dko1j1V0HsI',
         }
@@ -241,7 +241,7 @@ class PrivetRecipeApiTest(TestCase):
         """ test: creating recipe with new tags """
         payload = {
             'title': 'thai prawn curry',
-            'time_minuts': 30,
+            'time_minutes': 30,
             'price': Decimal('30.99'),
             # finally found the problemm; this have a syntex error
             # 'tags': {
@@ -278,7 +278,7 @@ class PrivetRecipeApiTest(TestCase):
         tag_indian = Tag.objects.create(user=self.user, name='indian')
         payload = {
             'title': 'dosa',
-            'time_minuts':20,
+            'time_minutes':20,
             'price': Decimal('1.50'),
             'tags':[
                 {'name': 'indian'},
@@ -404,14 +404,14 @@ class PrivetRecipeApiTest(TestCase):
             'title': 'burger',
             'time_minutes': 30,
             'price': Decimal('3.99'),
-            'ingredients': [{'name': 'potato'}, {'name': 'pepper'}]
+            'ingredient': [{'name': 'potato'}, {'name': 'pepper'}]
         }
         res = self.client.post(RECIPE_URLS, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         recipe = Recipe.objects.get(user=self.user)
-        self.assertEqual(recipe.ingredients.count(), 2)
-        for i in payload['ingredients']:
-            self.assertTrue(recipe.ingredients.filter(name=i['name'], user=self.user).exists())
+        self.assertEqual(recipe.ingredient.count(), 2)
+        for i in payload['ingredient']:
+            self.assertTrue(recipe.ingredient.filter(name=i['name'], user=self.user).exists())
 
     def test_create_recipe_with_existing_ingredient(self):
         ing = Ingredient.objects.create(user=self.user, name='lemon')
@@ -419,10 +419,10 @@ class PrivetRecipeApiTest(TestCase):
             'title': 'chiness soup',
             'time_minutes': 30,
             'price': Decimal('9.33'),
-            'ingredients': [{'name': 'lemon'}, {'name': 'dog'}]
+            'ingredient': [{'name': 'lemon'}, {'name': 'dog'}]
         }
         res = self.client.post(RECIPE_URLS, payload, format='json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         recipe = Recipe.objects.get(user=self.user)
-        self.assertEqual(recipe.ingredients.count(), 2)
-        self.assertIn(ing, recipe.ingredients.all())
+        self.assertEqual(recipe.ingredient.count(), 2)
+        self.assertIn(ing, recipe.ingredient.all())

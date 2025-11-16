@@ -1,4 +1,4 @@
-"""creating models for recepi app"""
+"""creating models for the recipe app"""
 
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -12,7 +12,7 @@ class Recipe(models.Model):
     # title = models.CharField(max_length=255), # bug fixed: ','
     title = models.CharField(max_length=255, null=True, blank=True )
     description = models.TextField(blank=True)
-    time_minuts = models.IntegerField()
+    time_minutes = models.IntegerField()
     price = models.DecimalField(max_digits=5, decimal_places=2)
     link = models.CharField(max_length=255, blank=True)
 
