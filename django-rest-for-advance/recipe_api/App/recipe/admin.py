@@ -7,6 +7,7 @@ from .models import Recipe, Tag, Ingredient
 @admin.register(Recipe)
 class RecipeAdminModel(ModelAdmin):
     list_display = [
+        'id',
         'user',
         'title',
         'time_minutes',
@@ -16,6 +17,7 @@ class RecipeAdminModel(ModelAdmin):
 @admin.register(Tag)
 class TagAdmin(ModelAdmin):
     list_display = [
+        'id',
         'user',
         'name',
     ]
@@ -24,6 +26,7 @@ class TagAdmin(ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(ModelAdmin):
     list_display = [
+        'id',
         'user',
         'name'
     ]

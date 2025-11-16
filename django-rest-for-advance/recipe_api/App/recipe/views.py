@@ -1,5 +1,10 @@
 """views for the recipe api"""
 
+
+# for test
+from rest_framework.parsers import MultiPartParser, FormParser
+
+
 from rest_framework import (
     viewsets, 
     mixins,
@@ -54,7 +59,9 @@ class RecipeViewset(viewsets.ModelViewSet):
         if self.action == 'list':
             return RecipeSerializer
 
-        elif self.action == 'upload-image':
+        # elif self.action == 'upload-image': 
+        #fixed instead of sending to desired url i am enter wrong url 
+        elif self.action == 'upload_image':
             return RecipeImageSerializer
 
         
@@ -64,12 +71,23 @@ class RecipeViewset(viewsets.ModelViewSet):
         """creating new recipe"""
         serializer.save(user = self.request.user)
 
-    @action(methods=['POST'], detail=True, url_path='upload-image')
+    # @action(methods=['POST'], detail=True, url_path='upload-image')
+    # def upload_image(self, request, pk=None):
+    #     """upload an image to recipe"""
+    #     recipe = self.get_object()
+    #     serializer = self.get_serializer(recipe, data=request.data)
+
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # added this in order to fix bug
+    # @action(methods=['POST'], detail=True, url_path='upload-image')
+    @action(methods=['POST'], detail=True, url_path='upload-image', parser_classes=[MultiPartParser, FormParser])
     def upload_image(self, request, pk=None):
-        """upload an image to recipe"""
         recipe = self.get_object()
         serializer = self.get_serializer(recipe, data=request.data)
-
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

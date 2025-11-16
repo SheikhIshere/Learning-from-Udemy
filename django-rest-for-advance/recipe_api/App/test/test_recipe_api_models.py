@@ -1,5 +1,9 @@
 """test for the models like recipe + etc"""
 
+from django.core.files.uploadedfile import SimpleUploadedFile
+from io import BytesIO
+
+
 import tempfile
 import os
 from django.urls import reverse
@@ -500,7 +504,7 @@ class ImageUploadTestCase(TestCase):
     
     def tearDown(self):
         self.recipe.image.delete()
-    
+    # main backup
     def test_upload_image(self):
         """Test uploading an image to a recipe."""
         url = image_uploade_url(self.recipe.id)
@@ -515,6 +519,26 @@ class ImageUploadTestCase(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertIn('image', res.data)
         self.assertTrue(os.path.exists(self.recipe.image.path))
+
+    # test
+    # def test_upload_image(self):
+    #     url = image_uploade_url(self.recipe.id)
+    #     buffer = BytesIO()
+    #     Image.new('RGB', (10, 10)).save(buffer, format='JPEG')
+    #     buffer.seek(0)
+    #     file = SimpleUploadedFile('test.jpg', buffer.read(), content_type='image/jpeg')
+    #     res = self.client.post(url, {'image': file}, format='multipart')
+
+    #     # debug
+    #     # if res:
+    #     #     print(res)
+    #     # else:
+    #     #     print('no file found')
+    #     self.recipe.refresh_from_db()
+    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
+    #     self.assertIn('image', res.data)
+    #     self.assertTrue(os.path.exists(self.recipe.image.path))
+
     
     def test_upload_image_bad_request(self):
         """Test: uploading invalid image"""
@@ -523,4 +547,3 @@ class ImageUploadTestCase(TestCase):
         res = self.client.post(url, payload, format='multipart')
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-        

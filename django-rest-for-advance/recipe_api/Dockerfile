@@ -11,24 +11,45 @@ ARG DEV=false
 
 COPY requirements.txt requirements.dev.txt /App/
 
+# RUN apt-get update && \
+#     apt-get install -y --no-install-recommends \
+#         libpq5 libjpeg62-turbo \
+#         build-essential libpq-dev zlib1g-dev libjpeg62-turbo-dev && \
+#     pip install --upgrade pip && \
+#     pip install --no-cache-dir -r /App/requirements.txt && \
+#     [ "$DEV" = "true" ] && pip install --no-cache-dir -r /App/requirements.dev.txt || true && \
+#     apt-get purge -y build-essential libpq-dev zlib1g-dev libjpeg62-turbo-dev && \
+#     apt-get autoremove -y && \
+#     rm -rf /var/lib/apt/lists/*
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         libpq5 libjpeg62-turbo \
         build-essential libpq-dev zlib1g-dev libjpeg62-turbo-dev && \
     pip install --upgrade pip && \
     pip install --no-cache-dir -r /App/requirements.txt && \
-    [ "$DEV" = "true" ] && pip install --no-cache-dir -r /App/requirements.dev.txt || true && \
+    if [ "$DEV" = "true" ]; then \
+        pip install --no-cache-dir -r /App/requirements.dev.txt; \
+    fi && \
     apt-get purge -y build-essential libpq-dev zlib1g-dev libjpeg62-turbo-dev && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
 COPY ./App /App
 
+# backup
+# RUN useradd --create-home --shell /bin/sh django-user && \
+#     chown -R django-user:django-user /App && \
+#     mkdir -p /vol/static/media /vol/web/static && \
+#     chown -R django-user:django-user /vol && \
+#     chmod -R 755 /vol/web
+
+# test1
 RUN useradd --create-home --shell /bin/sh django-user && \
     chown -R django-user:django-user /App && \
-    mkdir -p /vol/static/media /vol/web/static && \
-    chown -R django-user:django-user /vol && \
-    chmod -R 755 /vol/web
+    mkdir -p /vol/web/media /vol/web/static && \
+    chown -R django-user:django-user /vol/web && \
+    chmod -R 777 /vol/web  # TEMP: for testing
 
 USER django-user
 
