@@ -547,3 +547,47 @@ class ImageUploadTestCase(TestCase):
         res = self.client.post(url, payload, format='multipart')
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+    
+    def test_filter_by_tag(self):
+        """here i am testing with filter with tag"""
+        r1 = create_recipe(user=self.user, title='alu vaji')
+        r2 = create_recipe(user=self.user, title='alu vorta')
+        tag1 = Tag.objects.create(user=self.user, name='vegan')
+        tag2 = Tag.objects.create(user=self.user, name='alu')
+        r1.tags.add(tag1)
+        r2.tags.add(tag2)
+        r3 = create_recipe(user=self.user, title='fish and chips')
+
+        params = {'tags': f'{tag1.id}, {tag2.id}'}
+        res = self.client.get(RECIPE_URLS, params)
+
+        s1 = RecipeSerializer(r1)
+        s2 = RecipeSerializer(r2)
+        s3 = RecipeSerializer(r3)
+
+        self.assertIn(s1.data, res.data)
+        self.assertIn(s2.data, res.data)
+        self.assertNotIn(s3.data, res.data)
+
+    def test_filter_by_ingredient(self):
+        """test filtering recipe by ingredient""" 
+        r1 = create_recipe(user=self.user, title='alu vaji')
+        r2 = create_recipe(user=self.user, title='alu vorta')
+        in1 = Ingredient.objects.create(user=self.user, name='alu')
+        in2 = Ingredient.objects.create(user=self.user, name='oil')
+        r1.ingredient.add(in1)
+        r2.ingredient.add(in2)
+        r3 = create_recipe(user=self.user, title='begun')
+
+        params = {'ingredient': f'{in1.id}, {in2.id}'}
+        res = self.client.get(RECIPE_URLS, params)
+
+        s1 = RecipeSerializer(r1)
+        s2 = RecipeSerializer(r2)
+        s3 = RecipeSerializer(r3)
+
+        self.assertIn(s1.data, res.data)
+        self.assertIn(s2.data, res.data)
+        self.assertNotIn(s3.data, res.data)        
+    
+    

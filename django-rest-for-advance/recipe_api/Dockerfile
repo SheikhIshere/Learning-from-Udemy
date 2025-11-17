@@ -49,7 +49,7 @@ RUN useradd --create-home --shell /bin/sh django-user && \
     chown -R django-user:django-user /App && \
     mkdir -p /vol/web/media /vol/web/static && \
     chown -R django-user:django-user /vol/web && \
-    chmod -R 777 /vol/web  # TEMP: for testing
+    chmod -R 755 /vol/web  # TEMP: for testing
 
 USER django-user
 
